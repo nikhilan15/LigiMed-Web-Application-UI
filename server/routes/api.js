@@ -1,11 +1,11 @@
 import express from 'express';
 import { register, login, logout, refreshToken, googleOAuth, sendOTP, verifyOTP } from '../controllers/authController.js';
 import { submitKYC, getKYCStatus, checkDocumentExpiry } from '../controllers/kycController.js';
-import { getProducts, compareDealers, createOrder, getOrders, updateOrderStatus } from '../controllers/marketplaceController.js';
+import { getProducts, compareDealers, createOrder, getOrders, updateOrderStatus, verifyPharmacistOrder } from '../controllers/marketplaceController.js';
 import { getInventory, updateStock, getForecasting } from '../controllers/inventoryController.js';
 import { getShipmentTracking, updateShipmentStatus, verifyDeliveryOTP, updateColdChainLog, sendDispatchOTP } from '../controllers/logisticsController.js';
 import { getInvoices, generateInvoice, generatePOSBill, getPublicInvoice } from '../controllers/billingController.js';
-import { getBNPLDetails, requestDrawdown } from '../controllers/bnplController.js';
+import { getBNPLDetails, requestDrawdown, topUpWalletController } from '../controllers/bnplController.js';
 import { submitReturn, processReturnDecision, getReturns } from '../controllers/reverseLogisticsController.js';
 import { bulkUploadProducts } from '../controllers/dealerController.js';
 import { getAdminMetrics, getUsers, toggleUserStatus, processKYCDecision, getAuditLogs } from '../controllers/adminController.js';
@@ -57,9 +57,11 @@ router.get('/marketplace/orders', verifyToken, checkRole(['pharmacy', 'dealer', 
 router.patch('/marketplace/orders/:orderId/status', verifyToken, checkRole(['dealer', 'admin', 'logistics']), updateOrderStatus);
 router.post('/dealers/products/bulk-upload', verifyToken, checkRole(['dealer', 'admin']), bulkUploadProducts);
 
+router.post('/marketplace/orders/:orderId/verify-pharmacist', verifyPharmacistOrder);
+
 // --- Pharmacy Inventory & AI Intelligence Routes ---
-router.get('/inventory', verifyToken, checkRole(['pharmacy', 'admin', 'dealer']), getInventory);
-router.post('/inventory/update', verifyToken, checkRole(['pharmacy', 'admin', 'dealer']), updateStock);
+router.get('/inventory', verifyToken, checkRole(['pharmacy', 'admin', 'dealer', 'pharmacist']), getInventory);
+router.post('/inventory/update', verifyToken, checkRole(['pharmacy', 'admin', 'dealer', 'pharmacist']), updateStock);
 router.get('/inventory/forecasting', verifyToken, checkRole(['pharmacy', 'admin']), getForecasting);
 
 // --- Logistics & Delivery OTP Verification Routes ---
@@ -75,9 +77,10 @@ router.post('/billing/invoices/generate', verifyToken, checkRole(['pharmacy', 'd
 router.post('/billing/pos/generate', verifyToken, checkRole(['pharmacy', 'admin']), generatePOSBill);
 router.get('/billing/public/:token', getPublicInvoice);
 
-// --- BNPL Credit Payments Routes ---
+// --- BNPL Credit Payments & Wallet Routes ---
 router.get('/bnpl/account', verifyToken, checkRole(['pharmacy', 'admin', 'finance']), getBNPLDetails);
 router.post('/bnpl/drawdown', verifyToken, checkRole(['pharmacy', 'admin']), requestDrawdown);
+router.post('/bnpl/wallet/topup', topUpWalletController);
 
 // --- Reverse Logistics & Returns Routes ---
 router.get('/logistics/returns', verifyToken, checkRole(['pharmacy', 'dealer', 'admin', 'logistics']), getReturns);

@@ -16,7 +16,7 @@ import {
 import { Button } from "../ui/button";
 
 interface SidebarProps {
-  userType: "pharmacy" | "dealer" | "admin";
+  userType: "pharmacy" | "dealer" | "admin" | "pharmacist";
   activePage: string;
   onNavigate: (page: string) => void;
 }
@@ -33,7 +33,7 @@ export function Sidebar({ userType, activePage, onNavigate }: SidebarProps) {
         { id: "tracking", label: "Logistics", icon: MapPin },
         { id: "reverse", label: "Returns", icon: RotateCcw },
         { id: "kyc", label: "KYC & Compliance", icon: Shield },
-        { id: "bnpl", label: "Payments", icon: CreditCard },
+        { id: "bnpl", label: "Payments & Wallet", icon: CreditCard },
       ];
     } else if (userType === "dealer") {
       return [
@@ -42,6 +42,14 @@ export function Sidebar({ userType, activePage, onNavigate }: SidebarProps) {
         { id: "inventory-upload", label: "Inventory & SKUs", icon: Package },
         { id: "analytics", label: "Sales Analytics", icon: TrendingUp },
         { id: "tracking", label: "Shipments & Logistics", icon: MapPin },
+      ];
+    } else if (userType === "pharmacist") {
+      return [
+        { id: "orders", label: "Shipment Verification", icon: Shield },
+        { id: "pharmacist-verification", label: "Quality Audit Checklist", icon: ClipboardList },
+        { id: "inventory", label: "Stock Inspection", icon: Package },
+        { id: "tracking", label: "Cold-Chain Logistics", icon: MapPin },
+        { id: "kyc", label: "Compliance Records", icon: FileText },
       ];
     } else {
       return [
@@ -66,7 +74,7 @@ export function Sidebar({ userType, activePage, onNavigate }: SidebarProps) {
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900">LigiMed</h2>
-            <p className="text-xs text-muted-foreground capitalize">{userType === "dealer" ? "Wholesale Dealer" : userType} Portal</p>
+            <p className="text-xs text-muted-foreground capitalize">{userType === "dealer" ? "Wholesale Dealer" : userType === "pharmacist" ? "Compliance Pharmacist" : userType} Portal</p>
           </div>
         </div>
       </div>

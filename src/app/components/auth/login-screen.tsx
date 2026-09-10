@@ -8,12 +8,12 @@ import { Pill, Building2, Mail, Lock, User, AlertCircle, CheckCircle2, ArrowRigh
 import { loginUser, registerUser } from "../../services/api";
 
 interface LoginScreenProps {
-  onLogin: (userType: "pharmacy" | "dealer", userData?: any, token?: string) => void;
+  onLogin: (userType: "pharmacy" | "dealer" | "admin" | "pharmacist", userData?: any, token?: string) => void;
   onStartKYC: () => void;
 }
 
 export function LoginScreen({ onLogin, onStartKYC }: LoginScreenProps) {
-  const [userType, setUserType] = useState<"pharmacy" | "dealer">("pharmacy");
+  const [userType, setUserType] = useState<"pharmacy" | "dealer" | "pharmacist">("pharmacy");
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [emailInput, setEmailInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
@@ -64,7 +64,7 @@ export function LoginScreen({ onLogin, onStartKYC }: LoginScreenProps) {
           email: emailInput,
           password: passwordInput,
           role: userType,
-          company_name: `${fullName} ${userType === 'dealer' ? 'Distributors' : 'Pharma'}`
+          company_name: `${fullName} ${userType === 'dealer' ? 'Distributors' : userType === 'pharmacist' ? 'Pharma Verification' : 'Pharma'}`
         });
         setIsLoading(false);
 
@@ -123,21 +123,27 @@ export function LoginScreen({ onLogin, onStartKYC }: LoginScreenProps) {
             <CardDescription className="text-xs text-gray-500">
               {userType === "pharmacy" 
                 ? "Pharmacy Portal - Browse inventory, place B2B orders & manage bills" 
+                : userType === "pharmacist"
+                ? "Licensed Pharmacist - Quality inspection, batch verification & seal checks"
                 : "Wholesale Dealer - Manage catalog, inventory & bulk pharmacy orders"}
             </CardDescription>
           </CardHeader>
           
           <CardContent className="space-y-5">
             {/* Role Selection Tabs */}
-            <Tabs value={userType} onValueChange={(v) => setUserType(v as "pharmacy" | "dealer")}>
-              <TabsList className="grid w-full grid-cols-2 h-11 p-1 bg-slate-100 rounded-xl">
-                <TabsTrigger value="pharmacy" className="gap-2 text-xs font-bold rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                  <Pill className="w-4 h-4" />
-                  Pharmacy Portal
+            <Tabs value={userType} onValueChange={(v) => setUserType(v as "pharmacy" | "dealer" | "pharmacist")}>
+              <TabsList className="grid w-full grid-cols-3 h-11 p-1 bg-slate-100 rounded-xl">
+                <TabsTrigger value="pharmacy" className="gap-1.5 text-xs font-bold rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white px-2">
+                  <Pill className="w-3.5 h-3.5" />
+                  Pharmacy
                 </TabsTrigger>
-                <TabsTrigger value="dealer" className="gap-2 text-xs font-bold rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                  <Building2 className="w-4 h-4" />
-                  Wholesale Dealer
+                <TabsTrigger value="dealer" className="gap-1.5 text-xs font-bold rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white px-2">
+                  <Building2 className="w-3.5 h-3.5" />
+                  Wholesale
+                </TabsTrigger>
+                <TabsTrigger value="pharmacist" className="gap-1.5 text-xs font-bold rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white px-2">
+                  <User className="w-3.5 h-3.5" />
+                  Pharmacist
                 </TabsTrigger>
               </TabsList>
             </Tabs>

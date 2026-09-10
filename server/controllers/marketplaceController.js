@@ -324,7 +324,39 @@ export async function getOrders(req, res) {
     }
     return res.json({ success: true, orders: mockDbStore.orders });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Failed to fetch orders' });
+    return { success: false, message: 'Failed to fetch orders' };
+  }
+}
+
+export async function verifyPharmacistOrder(req, res) {
+  try {
+    const { orderId } = req.params;
+    const verificationData = req.body;
+
+    const order = mockDbStore.orders.find(o => o.order_number === orderId || o.id == orderId);
+    if (order) {
+      order.pharmacistVerification = verificationData;
+      order.shipping_status = `VERIFIED_${verificationData.result || 'APPROVED'}`;
+    }
+
+    mockDbStore.auditLogs.unshift({
+      id: Date.now() + Math.random(),
+      actor: req.user ? req.user.email : (verificationData.pharmacistLicenseNo || 'Licensed Pharmacist'),
+      action: 'PHARMACIST_QUALITY_VERIFICATION',
+      entity: 'Order',
+      entity_id: orderId,
+      metadata: verificationData,
+      timestamp: new Date().toISOString()
+    });
+
+    return res.json({
+      success: true,
+      orderId,
+      result: verificationData.result || 'APPROVED',
+      message: 'Pharmacist physical verification successfully signed and saved to audit registry.'
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Failed to process pharmacist verification' });
   }
 }
 

@@ -85,7 +85,7 @@ export function MarketplaceScreen() {
 
   // Checkout & Order State
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "bnpl" | "cod">("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "bnpl" | "hybrid" | "bank_transfer" | "razorpay">("wallet");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [placedOrder, setPlacedOrder] = useState<any>(null);
 
@@ -895,34 +895,43 @@ export function MarketplaceScreen() {
 
               {/* Payment Method Selection */}
               <div className="space-y-2">
-                <Label className="font-bold text-gray-900">Select Payment Method</Label>
+                <Label className="font-bold text-gray-900">Select B2B Payment Method</Label>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <div
-                    onClick={() => setPaymentMethod("razorpay")}
-                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "razorpay" ? "border-blue-600 bg-blue-50/50" : "border-gray-200"}`}
+                    onClick={() => setPaymentMethod("wallet")}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "wallet" ? "border-emerald-600 bg-emerald-50/60" : "border-gray-200 hover:border-gray-300"}`}
                   >
-                    <CreditCard className="w-5 h-5 mx-auto text-blue-600" />
-                    <p className="font-bold text-[11px] text-gray-900">Razorpay / UPI</p>
-                    <p className="text-[9px] text-gray-500">Cards, UPI, Netbanking</p>
+                    <ShieldCheck className="w-5 h-5 mx-auto text-emerald-600" />
+                    <p className="font-bold text-[11px] text-gray-900">LigiMed Wallet</p>
+                    <p className="text-[9px] text-emerald-700 font-bold">Instant Escrow</p>
                   </div>
 
                   <div
                     onClick={() => setPaymentMethod("bnpl")}
-                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "bnpl" ? "border-blue-600 bg-blue-50/50" : "border-gray-200"}`}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "bnpl" ? "border-blue-600 bg-blue-50/60" : "border-gray-200 hover:border-gray-300"}`}
                   >
-                    <Sparkles className="w-5 h-5 mx-auto text-purple-600" />
-                    <p className="font-bold text-[11px] text-gray-900">LigiMed BNPL</p>
-                    <p className="text-[9px] text-gray-500">30-Day Escrow Credit</p>
+                    <Sparkles className="w-5 h-5 mx-auto text-blue-600" />
+                    <p className="font-bold text-[11px] text-gray-900">BNPL Credit</p>
+                    <p className="text-[9px] text-blue-700 font-bold">45 Days 0% Interest</p>
                   </div>
 
                   <div
-                    onClick={() => setPaymentMethod("cod")}
-                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "cod" ? "border-blue-600 bg-blue-50/50" : "border-gray-200"}`}
+                    onClick={() => setPaymentMethod("hybrid")}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "hybrid" ? "border-indigo-600 bg-indigo-50/60" : "border-gray-200 hover:border-gray-300"}`}
                   >
-                    <Banknote className="w-5 h-5 mx-auto text-emerald-600" />
-                    <p className="font-bold text-[11px] text-gray-900">Pay on Delivery</p>
-                    <p className="text-[9px] text-gray-500">Cheque / POD</p>
+                    <CreditCard className="w-5 h-5 mx-auto text-indigo-600" />
+                    <p className="font-bold text-[11px] text-gray-900">Wallet + Credit</p>
+                    <p className="text-[9px] text-indigo-700 font-bold">Split Payment</p>
+                  </div>
+
+                  <div
+                    onClick={() => setPaymentMethod("bank_transfer")}
+                    className={`p-3 rounded-xl border-2 cursor-pointer transition-all text-center space-y-1 ${paymentMethod === "bank_transfer" ? "border-amber-600 bg-amber-50/60" : "border-gray-200 hover:border-gray-300"}`}
+                  >
+                    <Banknote className="w-5 h-5 mx-auto text-amber-600" />
+                    <p className="font-bold text-[11px] text-gray-900">Bank Transfer</p>
+                    <p className="text-[9px] text-amber-700 font-bold">NEFT / RTGS Escrow</p>
                   </div>
                 </div>
               </div>

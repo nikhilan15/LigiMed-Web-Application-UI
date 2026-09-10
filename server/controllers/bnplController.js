@@ -101,3 +101,32 @@ export async function requestDrawdown(req, res) {
   }
 }
 
+export async function topUpWalletController(req, res) {
+  try {
+    const { amount } = req.body;
+    const topUpAmt = Number(amount);
+
+    if (isNaN(topUpAmt) || topUpAmt <= 0) {
+      return res.status(400).json({ success: false, message: 'Top-up amount must be a positive number' });
+    }
+
+    mockDbStore.auditLogs.unshift({
+      id: Date.now() + Math.random(),
+      actor: req.user ? req.user.email : 'Pharmacy User',
+      action: 'WALLET_TOPUP',
+      entity: 'LigiMed Wallet',
+      entity_id: 'WLT-MAIN',
+      metadata: { amount: topUpAmt },
+      timestamp: new Date().toISOString()
+    });
+
+    return res.json({
+      success: true,
+      amount: topUpAmt,
+      message: `Successfully topped up ₹${topUpAmt.toLocaleString('en-IN')} to LigiMed Digital Wallet.`
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Wallet top-up failed' });
+  }
+}
+

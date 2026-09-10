@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   ClipboardList, Search, Filter, FileText, Download, Printer, 
-  Building2, ShieldCheck, CheckCircle2, Clock, Truck, ChevronRight, X, ArrowUpRight
+  Building2, ShieldCheck, CheckCircle2, Clock, Truck, ChevronRight, X, ArrowUpRight, Award, UserCheck
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
@@ -9,6 +9,7 @@ import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Separator } from "../ui/separator";
+import { PharmacistVerificationModal, PharmacistInspectionData } from "../kyc/pharmacist-verification";
 
 interface OrderItem {
   id?: string;
@@ -31,6 +32,7 @@ interface WholesaleOrder {
   date?: string;
   gstin?: string;
   paymentMethod?: string;
+  pharmacistVerification?: PharmacistInspectionData;
 }
 
 export function PharmacyOrdersScreen() {
@@ -38,6 +40,7 @@ export function PharmacyOrdersScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState<WholesaleOrder | null>(null);
+  const [orderForVerification, setOrderForVerification] = useState<WholesaleOrder | null>(null);
 
   // Load orders from localStorage ligimed_orders
   useEffect(() => {
@@ -200,6 +203,22 @@ export function PharmacyOrdersScreen() {
     printWindow.document.close();
   };
 
+  const handleVerificationComplete = (inspectionData: PharmacistInspectionData) => {
+    const updatedOrders = orders.map((o) => {
+      if (o.id === inspectionData.orderId || o.id === orderForVerification?.id) {
+        return {
+          ...o,
+          status: `Verified (${inspectionData.result})`,
+          pharmacistVerification: inspectionData
+        };
+      }
+      return o;
+    });
+    setOrders(updatedOrders);
+    localStorage.setItem("ligimed_orders", JSON.stringify(updatedOrders));
+    setOrderForVerification(null);
+  };
+
   return (
     <div className="space-y-6">
       
@@ -208,9 +227,9 @@ export function PharmacyOrdersScreen() {
         <div>
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <ClipboardList className="w-5 h-5 text-blue-600" />
-            <span>Wholesale Pharmacy Orders & GST Invoices</span>
+            <span>Wholesale Pharmacy Orders, Quality Audit & GST Invoices</span>
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">Track your wholesale medicine purchase orders, status updates, and download B2B GST tax invoices.</p>
+          <p className="text-xs text-gray-500 mt-0.5">Track purchase orders, perform pharmacist batch/expiry verification, and download GST tax invoices.</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -277,13 +296,14 @@ export function PharmacyOrdersScreen() {
                   <th className="text-center p-4">Items / SKUs</th>
                   <th className="text-right p-4">Total Amount (₹)</th>
                   <th className="text-center p-4">Order Status</th>
+                  <th className="text-center p-4">Pharmacist Audit</th>
                   <th className="text-center p-4">Tax Invoice</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-gray-400 font-medium">
+                    <td colSpan={7} className="text-center py-12 text-gray-400 font-medium">
                       No wholesale orders found matching your criteria. Place orders from the Marketplace to view orders and GST invoices here.
                     </td>
                   </tr>
@@ -291,6 +311,8 @@ export function PharmacyOrdersScreen() {
                   filteredOrders.map((order) => {
                     const total = getOrderTotal(order);
                     const itemsCount = getItemsCount(order);
+                    const isVerified = order.pharmacistVerification || order.status.includes("Verified");
+
                     return (
                       <tr key={order.id} className="hover:bg-slate-50 transition-colors">
                         <td className="p-4">
@@ -310,13 +332,30 @@ export function PharmacyOrdersScreen() {
                         </td>
                         <td className="p-4 text-center">
                           <Badge variant="outline" className={`text-[10px] font-bold ${
-                            order.status === "Delivered" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                            order.status === "Dispatched" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                            order.status.includes("Verified") ? "bg-emerald-50 text-emerald-700 border-emerald-300" :
+                            order.status === "Delivered" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                            order.status === "Dispatched" ? "bg-cyan-50 text-cyan-700 border-cyan-200" :
                             order.status === "Processing" ? "bg-amber-50 text-amber-700 border-amber-200" :
                             "bg-slate-100 text-slate-700"
                           }`}>
                             {order.status}
                           </Badge>
+                        </td>
+                        <td className="p-4 text-center">
+                          {isVerified ? (
+                            <div className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full border border-emerald-300">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Audit Verified</span>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={() => setOrderForVerification(order)}
+                              className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] h-8 px-3 rounded-lg gap-1 border border-indigo-200 shadow-sm"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>Verify Quality</span>
+                            </Button>
+                          )}
                         </td>
                         <td className="p-4 text-center">
                           <Button
@@ -442,6 +481,15 @@ export function PharmacyOrdersScreen() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      )}
+
+      {/* Pharmacist Physical Verification Modal */}
+      {orderForVerification && (
+        <PharmacistVerificationModal
+          order={orderForVerification}
+          onComplete={handleVerificationComplete}
+          onClose={() => setOrderForVerification(null)}
+        />
       )}
 
     </div>

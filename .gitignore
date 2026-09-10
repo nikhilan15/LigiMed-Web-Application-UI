@@ -29,3 +29,6 @@ Thumbs.db
 # Scratch and temp files
 scratch/
 uploads/
+playwright-report/
+test-results/
+

@@ -128,3 +128,29 @@ export async function sendDispatchOTP(orderData: { orderId: string; pharmacyName
     return { success: false, message: 'Failed to contact logistics OTP service' };
   }
 }
+
+export async function submitPharmacistVerification(orderId: string, verificationData: any) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/marketplace/orders/${orderId}/verify-pharmacist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(verificationData)
+    });
+    return await res.json();
+  } catch (err) {
+    return { success: false, message: 'Failed to submit pharmacist verification' };
+  }
+}
+
+export async function topUpWallet(amount: number) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/bnpl/wallet/topup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount })
+    });
+    return await res.json();
+  } catch (err) {
+    return { success: false, message: 'Failed to top up wallet' };
+  }
+}

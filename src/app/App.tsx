@@ -18,7 +18,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { registerUser } from "./services/api";
 
-type UserType = "pharmacy" | "dealer" | "admin" | null;
+type UserType = "pharmacy" | "dealer" | "admin" | "pharmacist" | null;
 type Page = string;
 const SESSION_KEY = "ligimed_session";
 
@@ -161,7 +161,7 @@ export default function App() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        return parsed.role === "dealer" ? "dealer-dashboard" : parsed.role === "admin" ? "admin-dashboard" : "dashboard";
+        return parsed.role === "dealer" ? "dealer-dashboard" : parsed.role === "admin" ? "admin-dashboard" : parsed.role === "pharmacist" ? "orders" : "dashboard";
       } catch (e) {}
     }
     return "dashboard";
@@ -187,7 +187,7 @@ export default function App() {
         setUserProfile(parsed);
         const role = parsed.role || "pharmacy";
         setUserType(role);
-        setCurrentPage(role === "dealer" ? "dealer-dashboard" : role === "admin" ? "admin-dashboard" : "dashboard");
+        setCurrentPage(role === "dealer" ? "dealer-dashboard" : role === "admin" ? "admin-dashboard" : role === "pharmacist" ? "orders" : "dashboard");
         setIsAuthenticated(true);
         syncDealerToMarketplace(parsed);
       } catch (e) {}
@@ -213,7 +213,7 @@ export default function App() {
     }
     setIsAuthenticated(true);
     setShowKYC(false);
-    setCurrentPage(roleType === "dealer" ? "dealer-dashboard" : roleType === "admin" ? "admin-dashboard" : "dashboard");
+    setCurrentPage(roleType === "dealer" ? "dealer-dashboard" : roleType === "admin" ? "admin-dashboard" : roleType === "pharmacist" ? "orders" : "dashboard");
   };
 
   const handleLogout = () => {
@@ -286,7 +286,7 @@ export default function App() {
       }
     }
     
-    // Dealer / Distributor pages (Sellers manage inventory, orders, SKUs & logistics - NO Marketplace)
+    // Dealer / Distributor pages
     if (userType === "dealer") {
       switch (currentPage) {
         case "dealer-dashboard":
@@ -301,6 +301,23 @@ export default function App() {
           return <TrackingScreen />;
         default:
           return <DealerDashboard activeTab="dealer-dashboard" />;
+      }
+    }
+
+    // Pharmacist Quality Inspection pages
+    if (userType === "pharmacist") {
+      switch (currentPage) {
+        case "orders":
+        case "pharmacist-verification":
+          return <PharmacyOrdersScreen />;
+        case "inventory":
+          return <InventoryScreen />;
+        case "tracking":
+          return <TrackingScreen />;
+        case "kyc":
+          return <KYCCompliance />;
+        default:
+          return <PharmacyOrdersScreen />;
       }
     }
     
