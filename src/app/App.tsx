@@ -12,6 +12,7 @@ import { InventoryScreen } from "./components/inventory/inventory-screen";
 import { TrackingScreen } from "./components/logistics/tracking-screen";
 import { ReverseLogistics } from "./components/logistics/reverse-logistics";
 import { KYCCompliance } from "./components/kyc/kyc-compliance";
+import { PharmacistVerificationModal } from "./components/kyc/pharmacist-verification";
 import { BNPLDashboard } from "./components/payments/bnpl-dashboard";
 import { PharmacyOrdersScreen } from "./components/orders/pharmacy-orders-screen";
 import { AlertCircle, RefreshCw } from "lucide-react";
@@ -229,7 +230,7 @@ export default function App() {
     setShowKYC(true);
   };
 
-  const handleKYCComplete = async (type: "pharmacy" | "dealer", registrationData: { name: string; email: string; company_name: string; phone: string }) => {
+  const handleKYCComplete = async (type: "pharmacy" | "dealer", registrationData: { name: string; email: string; company_name: string; phone: string; password: string }) => {
     const response = await registerUser({ ...registrationData, role: type });
     if (response.success) {
       handleLogin(type, response.user, response.token);
@@ -309,7 +310,10 @@ export default function App() {
       switch (currentPage) {
         case "orders":
         case "pharmacist-verification":
-          return <PharmacyOrdersScreen />;
+          return <PharmacistVerificationModal
+            onClose={() => setCurrentPage("orders")}
+            onComplete={() => setCurrentPage("orders")}
+          />;
         case "inventory":
           return <InventoryScreen />;
         case "tracking":

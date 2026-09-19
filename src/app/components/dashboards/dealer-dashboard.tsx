@@ -12,7 +12,7 @@ import { Badge } from "../ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "../ui/dialog";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { sendDispatchOTP } from "../../services/api";
+import { sendDispatchOTP, API_BASE_URL, getAuthHeaders } from "../../services/api";
 
 interface DealerDashboardProps {
   activeTab?: string;
@@ -72,9 +72,9 @@ export function DealerDashboard({ activeTab = "dashboard" }: DealerDashboardProp
     setUploadResult(null);
 
     try {
-      const res = await fetch("http://localhost:3000/api/dealers/products/bulk-upload", {
+      const res = await fetch(`${API_BASE_URL}/dealers/products/bulk-upload`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ csvData: csvContent })
       });
       const data = await res.json();

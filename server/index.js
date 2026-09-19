@@ -42,6 +42,16 @@ if (!fs.existsSync(uploadsPath)) {
 }
 app.use('/uploads', express.static(uploadsPath));
 
+// Root Route
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'LigiMed API Backend',
+    health: '/api/health',
+    documentation: 'https://github.com/nikhilan15/LigiMed-Web-Application-UI'
+  });
+});
+
 // API Router
 app.use('/api', apiRouter);
 

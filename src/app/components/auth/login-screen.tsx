@@ -21,6 +21,7 @@ export function LoginScreen({ onLogin, onStartKYC }: LoginScreenProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const roleLabel = userType === "pharmacy" ? "Pharmacy" : userType === "dealer" ? "Dealer" : "Pharmacist";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,8 +240,8 @@ export function LoginScreen({ onLogin, onStartKYC }: LoginScreenProps) {
                   {isLoading
                     ? authMode === "signin" ? "Signing In..." : "Creating Account..."
                     : authMode === "signin"
-                      ? `Sign In as ${userType === "pharmacy" ? "Pharmacy" : "Dealer"}`
-                      : `Create ${userType === "pharmacy" ? "Pharmacy" : "Dealer"} Account`
+                      ? `Sign In as ${roleLabel}`
+                      : `Create ${roleLabel} Account`
                   }
                 </span>
                 <ArrowRight className="w-4 h-4" />

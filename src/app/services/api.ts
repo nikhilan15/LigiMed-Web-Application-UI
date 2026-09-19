@@ -1,5 +1,36 @@
 // LigiMed Frontend API Client Service
-const API_BASE_URL = 'http://localhost:3000/api';
+const configuredApiUrl = import.meta.env.VITE_API_BASE_URL as string | undefined;
+
+// Use the local API through Vite's proxy during development. Deployments can
+// provide VITE_API_BASE_URL without changing application code.
+export const API_BASE_URL = configuredApiUrl || (import.meta.env.DEV
+  ? '/api'
+  : 'https://ligimed-web-application-ui.onrender.com/api');
+
+export function getAuthHeaders(): Record<string, string> {
+  try {
+    const session = JSON.parse(localStorage.getItem('ligimed_session') || '{}');
+    return session.token ? { Authorization: `Bearer ${session.token}` } : {};
+  } catch {
+    return {};
+  }
+}
+
+async function apiRequest(path: string, options: RequestInit = {}) {
+  const headers = new Headers(options.headers);
+  if (!headers.has('Content-Type') && options.body) headers.set('Content-Type', 'application/json');
+  for (const [key, value] of Object.entries(getAuthHeaders())) headers.set(key, value);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
+    const data = await res.json().catch(() => ({}));
+    return data.success === undefined && !res.ok
+      ? { success: false, message: `Request failed (${res.status})` }
+      : data;
+  } catch {
+    return { success: false, message: 'Unable to contact the LigiMed service.' };
+  }
+}
 
 export async function fetchHealthStatus() {
   try {
@@ -12,12 +43,11 @@ export async function fetchHealthStatus() {
 
 export async function sendEmailOTP(email: string) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/send-otp`, {
+    return await apiRequest('/auth/send-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email })
     });
-    return await res.json();
   } catch (err) {
     return { success: false, message: 'Unable to contact the authentication service.' };
   }
@@ -25,12 +55,11 @@ export async function sendEmailOTP(email: string) {
 
 export async function verifyEmailOTP(email: string, otp: string, role: string = 'pharmacy') {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+    return await apiRequest('/auth/verify-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp, role })
     });
-    return await res.json();
   } catch (err) {
     return { success: false, message: 'Unable to contact the authentication service.' };
   }
@@ -38,24 +67,22 @@ export async function verifyEmailOTP(email: string, otp: string, role: string = 
 
 export async function loginWithGoogleToken(googleProfile: { email?: string; name?: string; picture?: string; token?: string }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/auth/google`, {
+    return await apiRequest('/auth/google', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(googleProfile)
     });
-    return await res.json();
   } catch (err) {
     return { success: false, message: 'Unable to contact the authentication service.' };
   }
 }
 
 export async function loginUser(credentials: { email: string; password: string; role?: string }) {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+  return apiRequest('/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(credentials)
   });
-  return await res.json();
 }
 
 export async function registerUser(registrationData: {
@@ -66,21 +93,19 @@ export async function registerUser(registrationData: {
   company_name?: string;
   phone?: string;
 }) {
-  const res = await fetch(`${API_BASE_URL}/auth/register`, {
+  return apiRequest('/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(registrationData)
   });
-  return await res.json();
 }
 
 export async function submitKYCVerification(kycData: { gstin?: string; pan?: string; drugLicense?: string; userId?: number }) {
-  const res = await fetch(`${API_BASE_URL}/kyc/verify`, {
+  return apiRequest('/kyc/verify', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(kycData)
   });
-  return await res.json();
 }
 
 export async function fetchProducts(category?: string, search?: string) {
@@ -88,42 +113,36 @@ export async function fetchProducts(category?: string, search?: string) {
   if (category) params.append('category', category);
   if (search) params.append('search', search);
 
-  const res = await fetch(`${API_BASE_URL}/marketplace/products?${params.toString()}`);
-  return await res.json();
+  return apiRequest(`/marketplace/products?${params.toString()}`);
 }
 
 export async function placeB2BOrder(orderData: { items: any[]; totalAmount: number; paymentMethod?: string; shippingAddress?: string }) {
-  const res = await fetch(`${API_BASE_URL}/marketplace/orders`, {
+  return apiRequest('/marketplace/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(orderData)
   });
-  return await res.json();
 }
 
 export async function fetchTracking(trackingNumber: string = 'LM-TRACK-9901') {
-  const res = await fetch(`${API_BASE_URL}/logistics/tracking/${trackingNumber}`);
-  return await res.json();
+  return apiRequest(`/logistics/tracking/${trackingNumber}`);
 }
 
 export async function fetchBNPLAccount() {
-  const res = await fetch(`${API_BASE_URL}/bnpl/account`);
-  return await res.json();
+  return apiRequest('/bnpl/account');
 }
 
 export async function fetchInvoices() {
-  const res = await fetch(`${API_BASE_URL}/billing/invoices`);
-  return await res.json();
+  return apiRequest('/billing/invoices');
 }
 
 export async function sendDispatchOTP(orderData: { orderId: string; pharmacyName?: string; pharmacyEmail?: string; otpCode?: string }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/logistics/send-dispatch-otp`, {
+    return await apiRequest('/logistics/send-dispatch-otp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(orderData)
     });
-    return await res.json();
   } catch (err) {
     return { success: false, message: 'Failed to contact logistics OTP service' };
   }
@@ -131,12 +150,11 @@ export async function sendDispatchOTP(orderData: { orderId: string; pharmacyName
 
 export async function submitPharmacistVerification(orderId: string, verificationData: any) {
   try {
-    const res = await fetch(`${API_BASE_URL}/marketplace/orders/${orderId}/verify-pharmacist`, {
+    return await apiRequest(`/marketplace/orders/${orderId}/verify-pharmacist`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(verificationData)
     });
-    return await res.json();
   } catch (err) {
     return { success: false, message: 'Failed to submit pharmacist verification' };
   }
@@ -144,12 +162,11 @@ export async function submitPharmacistVerification(orderId: string, verification
 
 export async function topUpWallet(amount: number) {
   try {
-    const res = await fetch(`${API_BASE_URL}/bnpl/wallet/topup`, {
+    return await apiRequest('/bnpl/wallet/topup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ amount })
     });
-    return await res.json();
   } catch (err) {
     return { success: false, message: 'Failed to top up wallet' };
   }

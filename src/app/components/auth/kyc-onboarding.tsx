@@ -7,13 +7,16 @@ import { Progress } from "../ui/progress";
 import { Upload, CheckCircle, Pill } from "lucide-react";
 
 interface KYCOnboardingProps {
-  onComplete: (userType: "pharmacy" | "dealer", registrationData: { name: string; email: string; company_name: string; phone: string }) => void;
+  onComplete: (userType: "pharmacy" | "dealer", registrationData: { name: string; email: string; company_name: string; phone: string; password: string }) => void;
   onBack: () => void;
 }
 
 export function KYCOnboarding({ onComplete, onBack }: KYCOnboardingProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [userType, setUserType] = useState<"pharmacy" | "dealer">("pharmacy");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     businessName: "",
@@ -43,6 +46,19 @@ export function KYCOnboarding({ onComplete, onBack }: KYCOnboardingProps) {
   };
 
   const handleNext = () => {
+    setErrorMessage(null);
+    if (currentStep === 1 && (!formData.businessName.trim() || !formData.ownerName.trim() || !formData.email.trim() || !formData.phone.trim())) {
+      setErrorMessage("Please complete all business, owner, email, and phone details.");
+      return;
+    }
+    if (currentStep === 1 && !/^[6-9]\d{9}$/.test(formData.phone.trim())) {
+      setErrorMessage("Please enter a valid 10-digit Indian mobile number.");
+      return;
+    }
+    if (currentStep === 1 && (password.length < 8 || password !== confirmPassword)) {
+      setErrorMessage("Use a password of at least 8 characters and make sure both passwords match.");
+      return;
+    }
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     } else {
@@ -50,7 +66,8 @@ export function KYCOnboarding({ onComplete, onBack }: KYCOnboardingProps) {
         name: formData.ownerName || formData.businessName,
         email: formData.email,
         company_name: formData.businessName,
-        phone: formData.phone
+        phone: formData.phone,
+        password
       });
     }
   };
@@ -110,6 +127,7 @@ export function KYCOnboarding({ onComplete, onBack }: KYCOnboardingProps) {
             <CardDescription>{steps[currentStep - 1].description}</CardDescription>
           </CardHeader>
           <CardContent>
+            {errorMessage && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{errorMessage}</p>}
             {currentStep === 1 && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -164,6 +182,16 @@ export function KYCOnboarding({ onComplete, onBack }: KYCOnboardingProps) {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="Enter email address"
                   />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="kycPassword">Create Password</Label>
+                    <Input id="kycPassword" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="kycConfirmPassword">Confirm Password</Label>
+                    <Input id="kycConfirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter password" />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Business Address</Label>

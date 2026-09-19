@@ -42,6 +42,17 @@ test.describe('LigiMed Authentication & Onboarding E2E Tests', () => {
     await expect(page.getByRole('button', { name: 'Sign In as Dealer' })).toBeVisible();
   });
 
+  test('should present pharmacist-specific authentication actions', async ({ page }) => {
+    await page.goto('/');
+
+    await page.getByRole('tab', { name: /Pharmacist/i }).click();
+
+    await expect(page.getByText(/Licensed Pharmacist - Quality inspection/i)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign In as Pharmacist' })).toBeVisible();
+    await page.getByRole('button', { name: 'Sign Up' }).click();
+    await expect(page.getByRole('button', { name: 'Create Pharmacist Account' })).toBeVisible();
+  });
+
   test('should register a new pharmacy account and redirect to dashboard', async ({ page }) => {
     await page.goto('/');
 
@@ -59,6 +70,28 @@ test.describe('LigiMed Authentication & Onboarding E2E Tests', () => {
     await page.getByRole('button', { name: 'Create Pharmacy Account' }).click();
 
     // Should display success message or navigate to Pharmacy Dashboard
+    await expect(page.getByText('Dashboard').first()).toBeVisible({ timeout: 10000 });
+  });
+
+  test('should complete full KYC onboarding with account credentials', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: /Register with GST & Drug License/i }).click();
+
+    const uniqueEmail = `kyc_${Date.now()}@gmail.com`;
+    const uniquePhone = `9${Date.now().toString().slice(-9)}`;
+    await page.getByLabel('Business Name').fill('KYC E2E Pharmacy');
+    await page.getByLabel('Owner Name').fill('KYC E2E Owner');
+    await page.getByLabel('Phone Number').fill(uniquePhone);
+    await page.getByLabel('Email Address').fill(uniqueEmail);
+    await page.getByLabel('Business Address').fill('1 Test Street, Chennai');
+    await page.getByLabel('Create Password').fill('Password123!');
+    await page.getByLabel('Confirm Password').fill('Password123!');
+
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Submit & Complete' }).click();
+
     await expect(page.getByText('Dashboard').first()).toBeVisible({ timeout: 10000 });
   });
 });
